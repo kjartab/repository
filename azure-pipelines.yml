@@ -23,7 +23,7 @@ pool:
 
 steps: 
 
-- script: dotnet build --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory) -p:PackageVersion=$(Version)-alpha$(alphaVersion)
+- script: dotnet pack --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory) -p:PackageVersion=$(Version)-alpha$(alphaVersion)
   displayName: 'dotnet pack $(buildConfiguration)'
   condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
   
