@@ -9,6 +9,7 @@ variables:
   Version.MajorMinor: $(Version.Major).$(Version.Minor)
   Version.Patch: $[counter(variables['Version.MajorMinor'],0)]
   Version: $(Version.Major).$(Version.Minor).$(Version.Patch) 
+  AlphaVersion: $[counter(variables['Version'],0)]
   buildConfiguration: 'Release'
 
 trigger:
@@ -22,11 +23,11 @@ pool:
 
 steps: 
 
-- script: dotnet build --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory) -p:PackageVersion=$(Version)$(alphaVersion)
+- script: dotnet build --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory) -p:PackageVersion=$(Version)-alpha$(alphaVersion)
   displayName: 'dotnet pack $(buildConfiguration)'
   condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
   
-- script: dotnet pack --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory) -p:PackageVersion=$(Version)$(alphaVersion)
+- script: dotnet pack --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory) -p:PackageVersion=$(Version)
   displayName: 'dotnet pack $(buildConfiguration)'
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
 
