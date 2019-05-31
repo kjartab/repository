@@ -27,8 +27,18 @@ steps:
   displayName: 'dotnet pack $(buildConfiguration)'
   condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
   
+- task: CmdLine@2
+  inputs:
+    script: 'echo $(Version)-alpha$(alphaVersion) >> $(Build.ArtifactStagingDirectory)/version.txt'
+  condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
+
 - script: dotnet pack --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory) -p:PackageVersion=$(Version)
   displayName: 'dotnet pack $(buildConfiguration)'
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+
+- task: CmdLine@2
+  inputs:
+    script: 'echo $(Version) >> $(Build.ArtifactStagingDirectory)/version.txt'
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
 
 - task: PublishBuildArtifacts@1
