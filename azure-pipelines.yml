@@ -3,6 +3,15 @@
 # Add steps that run tests, create a NuGet package, deploy, and more:
 # https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
 
+variables:
+  Version.Major: 0
+  Version.Minor: 0
+  Version.MajorMinor: $(Version.Major).$(Version.Minor)
+  Version.Patch: $[counter(variables['Version.MajorMinor'],0)]
+  Version: $(Version.Major).$(Version.Minor).$(Version.Patch) 
+  AlphaVersion: $[counter(variables['Version'],0)]
+  buildConfiguration: 'Release'
+
 trigger:
   batch: true
   branches:
@@ -12,13 +21,28 @@ trigger:
 pool:
   name: default
 
-variables:
-  buildConfiguration: 'Release'
+steps: 
 
-steps:
-- script: dotnet build --configuration $(buildConfiguration)
-  displayName: 'dotnet build $(buildConfiguration)'
- 
-
-- script: dotnet pack --configuration $(buildConfiguration)
+- script: dotnet pack --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory) -p:PackageVersion=$(Version)-alpha$(alphaVersion)
   displayName: 'dotnet pack $(buildConfiguration)'
+  condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
+  
+- task: CmdLine@2
+  inputs:
+    script: 'echo $(Version)-alpha$(alphaVersion) >> $(Build.ArtifactStagingDirectory)/version.txt'
+  condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
+
+- script: dotnet pack --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory) -p:PackageVersion=$(Version)
+  displayName: 'dotnet pack $(buildConfiguration)'
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+
+- task: CmdLine@2
+  inputs:
+    script: 'echo $(Version) >> $(Build.ArtifactStagingDirectory)/version.txt'
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
